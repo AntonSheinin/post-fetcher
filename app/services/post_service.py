@@ -26,6 +26,9 @@ class PostService:
         post_doc = await posts_collection.find_one({"post_id": post_id})
 
         if post_doc:
+            # Convert ObjectId to string for Pydantic
+            if "_id" in post_doc:
+                post_doc["_id"] = str(post_doc["_id"])
             return PostModel(**post_doc)
         return None
 
