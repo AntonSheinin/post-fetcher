@@ -6,9 +6,9 @@ import logging
 from typing import Optional
 
 from dotenv import load_dotenv
-from pymongo import AsyncMongoClient
-from pymongo.database import AsyncDatabase
-from pymongo.collection import AsyncCollection
+from pymongo.asynchronous.mongo_client import AsyncMongoClient
+from pymongo.asynchronous.database import AsyncDatabase
+from pymongo.asynchronous.collection import AsyncCollection
 
 # Load environment variables
 load_dotenv()
@@ -69,7 +69,7 @@ class DatabaseManager:
 
     def get_database(self) -> AsyncDatabase:
         """Get database instance."""
-        if not self._is_connected or not self._database:
+        if not self._is_connected or self._database is None:
             raise ConnectionError("Database not connected")
         return self._database
 

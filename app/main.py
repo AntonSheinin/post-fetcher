@@ -1,15 +1,13 @@
 """
 FastAPI application main entry point.
 """
-import asyncio
 import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from app.models.database import database_manager
-from app.routers.posts import router as posts_router
-from app.services.background_tasks import periodic_fetcher
+from app.services.background_tasks import start_fetcher, stop_fetcher
 
 # Simple logging setup
 logging.basicConfig(level=logging.INFO)
@@ -25,12 +23,12 @@ async def lifespan(app: FastAPI):
     await database_manager.connect()
 
     # Start background fetcher task
-    fetcher_task = asyncio.create_task(periodic_fetcher())
+    start_fetcher()
 
     yield
 
     # Cleanup
-    fetcher_task.cancel()
+    stop_fetcher()
     await database_manager.disconnect()
     logger.info("Application stopped")
 
@@ -42,5 +40,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Include routers
-app.include_router(posts_router)
+# Include all routers
+from app.routers.posts import main_router, mongo_router, fetcher_router
+
+app.include_router(main_router)
+app.include_router(mongo_router)
+app.include_router(fetcher_router)
