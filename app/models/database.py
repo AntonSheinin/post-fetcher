@@ -6,16 +6,12 @@ import os
 import logging
 from typing import Optional
 
-from dotenv import load_dotenv
 from pymongo.asynchronous.database import AsyncDatabase
 from pymongo.asynchronous.collection import AsyncCollection
 from pymongo.asynchronous.mongo_client import AsyncMongoClient
 
 
-load_dotenv()
-
 logger = logging.getLogger(__name__)
-
 
 class DatabaseManager:
     """
@@ -86,6 +82,7 @@ class DatabaseManager:
         """
 
         if not self._is_connected or self._database is None:
+            logger.error("Database not connected")
             raise ConnectionError("Database not connected")
 
         return self._database
@@ -97,17 +94,7 @@ class DatabaseManager:
 
         return self.get_database()["posts"]
 
-
 database_manager = DatabaseManager()
-
-
-async def get_database() -> AsyncDatabase:
-    """
-        Dependency function to get database instance.
-    """
-
-    return database_manager.get_database()
-
 
 async def get_posts_collection() -> AsyncCollection:
     """

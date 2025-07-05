@@ -3,9 +3,8 @@ services:
     build: .
     ports:
       - "8000:8000"
-    environment:
-      - MONGODB_URL=mongodb://mongodb:27017
-      - DATABASE_NAME=posts_db
+    env_file:
+      - .env
     depends_on:
       - mongodb
 

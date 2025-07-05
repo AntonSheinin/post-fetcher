@@ -5,19 +5,15 @@
 import os
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any
 
 import httpx
-from dotenv import load_dotenv
 
 from app.models.database import get_posts_collection
 from app.models.schemas import PostModel, CommentModel
 from app.utils.date_generator import generate_random_date, generate_comment_date
 
 
-load_dotenv()
 logger = logging.getLogger(__name__)
-
 
 class FetcherService:
     """
@@ -25,7 +21,7 @@ class FetcherService:
     """
 
     def __init__(self) -> None:
-        self.base_url = os.getenv("JSONPLACEHOLDER_BASE_URL", "https://jsonplaceholder.typicode.com")
+        self.base_url = os.getenv("POST_SOURCE_URL", "https://jsonplaceholder.typicode.com")
         self.max_posts_per_fetch = int(os.getenv("MAX_POSTS_PER_FETCH", "10"))
         self.date_range_days = int(os.getenv("RANDOM_DATE_RANGE_DAYS", "365"))
         self._client = httpx.AsyncClient(timeout=30.0)
@@ -115,30 +111,29 @@ class FetcherService:
         logger.info("Starting fetch and store operation")
         start_time = datetime.now(timezone.utc)
 
-        # Fetch all posts and get existing IDs
         all_posts = await self._fetch_posts()
         existing_ids = await self._get_existing_post_ids()
 
-        # Filter new posts and limit to max per fetch
         new_posts = [post for post in all_posts if post["id"] not in existing_ids]
         posts_to_process = new_posts[:self.max_posts_per_fetch]
 
         logger.info(f"Processing {len(posts_to_process)} new posts")
 
-        # Process each post
         stored_count = 0
+
         for post_data in posts_to_process:
             try:
                 comments_data = await self._fetch_comments_for_post(post_data["id"])
                 post_model = self._transform_post_data(post_data, comments_data)
                 await self._save_post(post_model)
                 stored_count += 1
+
             except Exception as e:
                 logger.error(f"Failed to process post {post_data.get('id')}: {e}")
                 continue
 
-        # Calculate results
         processing_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+
         result = {
             "total_fetched": len(all_posts),
             "new_posts": stored_count,

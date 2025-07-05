@@ -29,6 +29,7 @@ class PostService:
         """
             Retrieve a post by its ID.
         """
+
         posts_collection = await get_posts_collection()
         post_doc = await posts_collection.find_one({"post_id": post_id})
 
@@ -36,8 +37,11 @@ class PostService:
             # Convert ObjectId to string for Pydantic
             if "_id" in post_doc:
                 post_doc["_id"] = str(post_doc["_id"])
+
+            logger.info(f"Found post with ID: {post_doc['post_id']}")
             return PostModel(**post_doc)
 
+        logger.info(f"No post with ID: {post_id}")
         return None
 
     async def get_post_response_only(self, post_id: int) -> PostResponse | None:
@@ -96,13 +100,15 @@ class PostService:
         )
 
         if not post_doc or "comments" not in post_doc:
+            logger.info(f"No comment with ID: {comment_id}")
             return None
 
         # Extract the specific comment
         comment_data = post_doc["comments"][0]
 
+        logger.info(f"Found comment: {comment_data["comment_id"]}")
         return CommentResponse(
-            comment_id=comment_data["comment_id"],
+            comment_id=comment_data,
             post_id=comment_data["post_id"],
             name=comment_data["name"],
             email=comment_data["email"],
@@ -117,6 +123,7 @@ class PostService:
         """
 
         if not query.strip():
+            logger.error(f"No search query: {query}")
             raise ValueError("Search query cannot be empty")
 
         posts_collection = await get_posts_collection()
@@ -157,6 +164,7 @@ class PostService:
         """
 
         if start_date and end_date and start_date > end_date:
+            logger.error(f"Start date must be before end date: {start_date}")
             raise ValueError("start_date cannot be after end_date")
 
         posts_collection = await get_posts_collection()
@@ -174,6 +182,7 @@ class PostService:
 
         count = await posts_collection.count_documents(date_filter)
 
+        logger.info(f"Found {count} posts in {start_date} to {end_date}")
         return PostCountResponse(
             count=count,
             start_date=start_date,

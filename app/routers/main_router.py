@@ -6,9 +6,13 @@ import logging
 from typing import List
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Query, Depends
+import jwt
+from fastapi.security import HTTPAuthorizationCredentials
+from fastapi import APIRouter, HTTPException, Query, Depends, Security
 
+from app.auth import security
 from app.services.post_service import PostService
+from app.routers.auth_router import get_current_user_id
 from app.models.schemas import (
     PostResponse,
     CommentResponse,
@@ -92,20 +96,29 @@ async def get_posts_count(
 
 @main_router.put("/{post_id}")
 async def update_post(
-    post_id: int,
-    update_data: PostUpdateRequest,
-    post_service: PostService = Depends(get_post_service)
+        post_id: int,
+        update_data: PostUpdateRequest,
+        token: HTTPAuthorizationCredentials = Security(security),
+        post_service: PostService = Depends(get_post_service)
 ) -> dict:
     """
-        Edit post message.
+        Edit post message (only by author)
     """
 
-    success = await post_service.update_post_body(post_id, update_data)
+    logger.info(f"Post updating request, post ID: {post_id}, update_data: {update_data}")
 
-    if not success:
+    post = await post_service.get_post_by_id(post_id)
+
+    if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    return {"message": "Post updated successfully"}
+    current_user_id = get_current_user_id(token)
+
+    if post.user_id != current_user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this post")
+
+    success = await post_service.update_post_body(post_id, update_data)
+    return {"message": "Post updated successfully"} if success else {"message": "Post updated failed"}
 
 
 @main_router.get("/comments/{comment_id}", response_model=CommentResponse)
@@ -123,3 +136,4 @@ async def get_comment(
         raise HTTPException(status_code=404, detail="Comment not found")
 
     return result
+

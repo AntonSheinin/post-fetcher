@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from app.services.background_tasks import start_fetcher, stop_fetcher, get_fetcher_status
 
+
 logger = logging.getLogger(__name__)
 
 fetcher_router = APIRouter(prefix="/fetcher", tags=["fetcher"])

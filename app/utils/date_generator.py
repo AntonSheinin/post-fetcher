@@ -9,7 +9,6 @@ from datetime import datetime, timedelta, timezone
 
 logger = logging.getLogger(__name__)
 
-
 def generate_random_date(days_back: int = 365) -> datetime:
     """
         Generate a random datetime within the specified number of days back from now.
@@ -39,10 +38,8 @@ def generate_comment_date(post_created_at: datetime, max_days_after: int = 30) -
     if post_created_at > now:
         raise ValueError("post_created_at cannot be in the future")
 
-    # Calculate the latest possible comment date
     latest_comment_date = min(post_created_at + timedelta(days=max_days_after), now)
 
-    # Calculate time range in seconds
     total_seconds = int((latest_comment_date - post_created_at).total_seconds())
 
     # If range is too small, add 1-60 minutes as fallback

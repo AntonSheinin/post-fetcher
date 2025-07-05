@@ -75,18 +75,6 @@ class PostModel(BaseModel):
         return v.strip()
 
 
-# class PostCreateRequest(BaseModel):
-#     """
-#         Request model for creating posts.
-#     """
-#
-#     post_id: int = Field(..., gt=0)
-#     user_id: int = Field(..., gt=0)
-#     title: str = Field(..., min_length=1, max_length=500)
-#     body: str = Field(..., min_length=1, max_length=5000)
-#     comments: List[CommentModel] = Field(default_factory=list)
-
-
 class PostUpdateRequest(BaseModel):
     """
         Request model for updating post content.
@@ -131,15 +119,6 @@ class CommentResponse(BaseModel):
     email: str
     body: str
     created_at: datetime
-
-
-class PostCommentsResponse(BaseModel):
-    """
-        Response model for post with comments.
-    """
-
-    post: PostResponse
-    comments: List[CommentResponse]
 
 
 class CommentSearchResponse(BaseModel):
